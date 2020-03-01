@@ -13,12 +13,19 @@ using namespace std;
 //NOTE: also make sure you save patron and book data to disk any time you make a change to them
 //NOTE: for files where data is stored see constants.h BOOKFILE and PATRONFILE
 
+vector<book> bookContainer;
+vector<patron> patronContainer;
+
 /*
  * clear books and patrons containers
  * then reload them from disk 
  */
-void reloadAllData(){
+void reloadAllData() {
+	bookContainer.clear();
+	patronContainer.clear();
 
+	loadBooks(bookContainer, BOOKFILE.c_str());
+	loadPatrons(patronContainer, PATRONFILE.c_str());
 }
 
 /* checkout a book to a patron
@@ -41,7 +48,8 @@ void reloadAllData(){
  * 		   BOOK_NOT_IN_COLLECTION
  *         TOO_MANY_OUT patron has the max number of books allowed checked out
  */
-int checkout(int bookid, int patronid){
+int checkout(int bookid, int patronid) {
+	reloadAllData();
 	return SUCCESS;
 }
 
@@ -57,7 +65,8 @@ int checkout(int bookid, int patronid){
  * returns SUCCESS checkout worked
  * 		   BOOK_NOT_IN_COLLECTION
  */
-int checkin(int bookid){
+int checkin(int bookid) {
+	reloadAllData();
 	return SUCCESS;
 }
 
@@ -70,8 +79,15 @@ int checkin(int bookid){
  * return 
  *    the patron_id of the person added
  */
-int enroll(std::string &name){
-	return 0;
+int enroll(string &name) {
+	reloadAllData();
+	patron newPatron;
+	newPatron.name = name;
+	newPatron.patron_id = patronContainer.size();
+	patronContainer.push_back(newPatron);
+	savePatrons(patronContainer, PATRONFILE.c_str());
+	return newPatron.patron_id;
+
 }
 
 /*
@@ -79,16 +95,18 @@ int enroll(std::string &name){
  * (ie. if 3 books returns 3)
  * 
  */
-int numbBooks(){
-	return 0;
+int numbBooks() {
+	reloadAllData();
+	return bookContainer.size();
 }
 
 /*
  * the number of patrons in the patrons container
  * (ie. if 3 patrons returns 3)
  */
-int numbPatrons(){
-	return 0;
+int numbPatrons() {
+	reloadAllData();
+	return patronContainer.size();
 }
 
 /*the number of books patron has checked out
@@ -96,8 +114,14 @@ int numbPatrons(){
  *returns a positive number indicating how many books are checked out 
  *        or PATRON_NOT_ENROLLED         
  */
-int howmanybooksdoesPatronHaveCheckedOut(int patronid){
-	return 0;
+int howmanybooksdoesPatronHaveCheckedOut(int patronid) {
+	reloadAllData();
+	for (uint i = 0; i < patronContainer.size(); i++) {
+		if (patronid == patronContainer[i].patron_id) {
+			return patronContainer[i].number_books_checked_out;
+		}
+	}
+	return PATRON_NOT_ENROLLED;
 }
 
 /* search through patrons container to see if patronid is there
@@ -106,7 +130,14 @@ int howmanybooksdoesPatronHaveCheckedOut(int patronid){
  * returns SUCCESS found it and name in name
  *         PATRON_NOT_ENROLLED no patron with this patronid
  */
-int whatIsPatronName(std::string &name,int patronid){
-	return SUCCESS;
+int whatIsPatronName(string &name, int patronid) {
+	reloadAllData();
+	for (uint i = 0; i < patronContainer.size(); i++) {
+		if (patronid == patronContainer[i].patron_id) {
+			name = patronContainer[i].name;
+			return SUCCESS;
+		}
+	}
+	return PATRON_NOT_ENROLLED;
 }
 
